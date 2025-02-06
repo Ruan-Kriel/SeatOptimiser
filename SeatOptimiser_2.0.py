@@ -31,7 +31,11 @@ if selected_tab == "Seat Optimiser":
         tables = len(st.session_state.Tables)
         seats = 7
         open_seats = [7 - table["Player"] for table in st.session_state.Tables]
-        total_players = sum(table["Table"] for table in st.session_state.Tables)
+        if (sum(table["Table"] for table in st.session_state.Tables)>0):
+            total_players = sum(table["Table"] for table in st.session_state.Tables)
+        else:
+            total_players = st.session_state.TotalPlayers 
+
 
         # Generate all possible combinations of seated players per table
         ranges = [list(range(0, open_seats[i] + 1)) for i in range(tables)]
@@ -71,21 +75,31 @@ if selected_tab == "Seat Optimiser":
             st.session_state.Tables[idx]["Optimised"] = best_solution[idx]
 
         st.session_state.optimised_prob = round(max_probability,2)
+   
 
-    # Transparent Variables
+    # Section for overall probabilities
+    if (sum(table["Table"] for table in st.session_state.Tables)>0):
+        Total_Players = sum(table["Table"] for table in st.session_state.Tables)
+        st.session_state.TotalPlayers = Total_Players
+
+    st.subheader("Probability Overview")
+    probability_cols = st.columns([1, 1])  # Add one extra column for the button
+    probability_cols[0].number_input("**Total Team Members**",min_value=0,key="TotalPlayers")
+    probability_cols[0].write("If team members entered below total team members cannot be changed")
+    probability_cols[1].subheader(f"**Current Probability**: {st.session_state.current_prob}")
+    probability_cols[1].subheader(f"**Maximum Probility**: {st.session_state.optimised_prob}")
+    probability_cols[1].button("Optimise", on_click=seating_probability,type="primary")
+
+     # Transparent Variables
     NoTables = len(st.session_state.Tables)
     NoSeats = 7
     Open_Seats = [7 - table["Player"] for table in st.session_state.Tables]
-    Total_Players = sum(table["Table"] for table in st.session_state.Tables)
+    if (sum(table["Table"] for table in st.session_state.Tables)>0):
+        Total_Players = sum(table["Table"] for table in st.session_state.Tables)
+    else:
+        Total_Players = st.session_state.TotalPlayers 
 
-    # Section for overall probabilities
-    st.subheader("Probability Overview")
-    probability_cols = st.columns([1, 1, 1])  # Add one extra column for the button
-    probability_cols[1].subheader(f"**Current Probability**: {st.session_state.current_prob}")
-    probability_cols[2].subheader(f"**Maximum Probility**: {st.session_state.optimised_prob}")
-    probability_cols[1].write(f"**Total Players**: {Total_Players}")
-    probability_cols[2].button("Optimise", on_click=seating_probability)
-
+        
     # Function to add a Table
     def add_Table():
         st.session_state.Tables.append({"Player": 0, "Table": 0, "Optimised": 0})
