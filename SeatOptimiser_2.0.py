@@ -81,9 +81,8 @@ if selected_tab == "Seat Optimiser":
     # Section for overall probabilities
     st.subheader("Probability Overview")
     probability_cols = st.columns([1, 1, 1])  # Add one extra column for the button
-    probability_cols[0].subheader("**Probability**")
-    probability_cols[1].subheader(f"**Current**: {st.session_state.current_prob}")
-    probability_cols[2].subheader(f"**Optimised**: {st.session_state.optimised_prob}")
+    probability_cols[1].subheader(f"**Current Probability**: {st.session_state.current_prob}")
+    probability_cols[2].subheader(f"**Maximum Probility**: {st.session_state.optimised_prob}")
     probability_cols[1].write(f"**Total Players**: {Total_Players}")
     probability_cols[2].button("Optimise", on_click=seating_probability)
 
@@ -101,6 +100,7 @@ if selected_tab == "Seat Optimiser":
         st.session_state.Tables[idx][key] = st.session_state[f"{key}_{idx}"]
         emptyTables = sum(1 for t in st.session_state.Tables if (t["Player"] + t["Table"]) == 0)
         st.session_state.current_prob = 0
+        st.session_state.optimised_prob = 0
 
         if emptyTables < NoTables:
             for t in range(NoTables):
@@ -119,7 +119,7 @@ if selected_tab == "Seat Optimiser":
             cols[0].number_input(
                 f"Opponents (Table {idx + 1})",
                 min_value=0,
-                max_value=NoSeats,
+                max_value=NoSeats-st.session_state.Tables[idx]["Table"],
                 value=st.session_state.Tables[idx]["Player"],
                 key=f"Player_{idx}",
                 on_change=update_table,
@@ -130,12 +130,24 @@ if selected_tab == "Seat Optimiser":
             cols[1].number_input(
                 f"Team Members (Table {idx + 1})",
                 min_value=0,
-                max_value=NoSeats,
+                max_value=NoSeats-st.session_state.Tables[idx]["Player"],
                 value=st.session_state.Tables[idx]["Table"],
                 key=f"Table_{idx}",
                 on_change=update_table,
                 args=(idx, "Table")
             )
+            opponents = st.session_state.Tables[idx]["Player"]  # Number of opponent players
+            team_members = st.session_state.Tables[idx]["Table"]  # Number of team members
+            total_filled = opponents + team_members
+            empty_seats = 7 - total_filled  # Remaining empty seats
+
+            # Generate seat visualization
+            seat_display = " ".join(["🔴"] * opponents + ["🟢"] * team_members + ["⚪"] * empty_seats)
+
+           # Display seats below the inputs
+            #cols[0].write("**Current Seating Arrangement:**")
+            cols[1].markdown(f"{seat_display}")
+
 
             # Text input for Optimised (disabled to prevent unwanted changes)
             cols[2].text_input(
@@ -145,22 +157,41 @@ if selected_tab == "Seat Optimiser":
                 disabled=True
             )
 
+            
+            team_members_opt = st.session_state.Tables[idx]["Optimised"]  # Number of team members
+            total_filled_opt = opponents + team_members_opt
+            empty_seats_opt = 7 - total_filled_opt  # Remaining empty seats
+
+            # Generate seat visualization
+            seat_display_opt = " ".join(["🔴"] * opponents + ["🟢"] * team_members_opt + ["⚪"] * empty_seats_opt)
+
+            # Display seats below the inputs
+            if st.session_state.optimised_prob!=0:
+                #cols[0].write("**Best Seating Arrangement:**")
+                cols[2].markdown(f"{seat_display_opt}")
+
     # Buttons for adding and removing Tables
     st.button("Add Table", on_click=add_Table)
     st.button("Remove Table", on_click=remove_Table)
+
+
+
 elif selected_tab == "Light Expected Value":
     # New Page Content
     st.title("Light Expected Value")
     st.subheader("If the EV is above 1, the odds are in you favour")
     
     # Three integer input boxes
-    num1 = st.number_input("Top Progressive", min_value=0, step=10000)
-    num2 = st.number_input("Second Progressive", min_value=0, step=10000)
-    num3 = st.number_input("Third Progressive", min_value=0, step=1000)
+    num1 = st.number_input("Top Progressive", min_value=0,value=1000000, step=10000)
+    num2 = st.number_input("Second Progressive", min_value=0,value=100000, step=10000)
+    num3 = st.number_input("Third Progressive", min_value=0,value=10000, step=1000)
     BetAmount = st.number_input("Bet Amount", min_value=0,value=100, step=50)
 
     #Display results
     EV = (800*num1+12480*num2+74880*num3+102160*50*BetAmount+204000*10*BetAmount)/(51584880*BetAmount)
     st.subheader(f"Expected value = {round(EV,2)}")
+
+
+
 
 
