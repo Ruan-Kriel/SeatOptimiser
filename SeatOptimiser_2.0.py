@@ -7,7 +7,7 @@ import numpy as np
 st.set_page_config(page_title="Table Probability Optimiser", layout="centered")
 
 # Add tab navigation
-selected_tab = st.sidebar.radio("Select Page", ["Seat Optimiser", "Light Expected Value"])
+selected_tab = st.sidebar.radio("Select Page", ["Seat Optimiser", "Poker Side Bet Expected Value","Blackjack Side Bet Expected Value"])
 
 if selected_tab == "Seat Optimiser":
     # Title
@@ -190,9 +190,9 @@ if selected_tab == "Seat Optimiser":
 
 
 
-elif selected_tab == "Light Expected Value":
+elif selected_tab == "Poker Side Bet Expected Value":
     # New Page Content
-    st.title("Light Expected Value")
+    st.title("Poker Side Bet Expected Value")
     st.subheader("If the EV is above 1, the odds are in you favour")
     
     # Three integer input boxes
@@ -205,7 +205,17 @@ elif selected_tab == "Light Expected Value":
     EV = (800*num1+12480*num2+74880*num3+102160*50*BetAmount+204000*10*BetAmount)/(51584880*BetAmount)
     st.subheader(f"Expected value = {round(EV,2)}")
 
+elif selected_tab == "Blackjack Side Bet Expected Value":
+    # New Page Content
+    st.title("Blackjack Side Bet Expected Value")
+    st.subheader("If the EV is above 1, the odds are in you favour")
+    
+    # Three integer input boxes
+    num1 = st.number_input("Top Progressive", min_value=0,value=1000000, step=10000)
+    num2 = st.number_input("Second Progressive", min_value=0,value=100000, step=10000)
+    num3 = st.number_input("Third Progressive", min_value=0,value=10000, step=1000)
+    BetAmount = st.number_input("Bet Amount", min_value=0,value=100, step=50)
 
-
-
-
+    #Display results
+    EV = (800*num1+12480*num2+74880*num3+102160*50*BetAmount+204000*10*BetAmount)/(51584880*BetAmount)
+    st.subheader(f"Expected value = {round(EV,2)}")
