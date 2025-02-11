@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import itertools
 import numpy as np
-from streamlit_drawable_canvas import st_canvas
 import math
 
 def format_currency(number):
