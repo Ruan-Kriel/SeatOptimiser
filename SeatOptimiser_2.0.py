@@ -11,21 +11,23 @@ def format_currency(number):
     else:
         return f"R{number:,}"
 
+sts=st.session_state
+
 # Set page configuration for mobile view
 st.set_page_config(page_title="Table Probability Optimiser", layout="centered")
 
 # Add tab navigation
 # Define the tabs
-tabs = ["Seat Optimiser", "Poker Side Bet Expected Value", "Blackjack Side Bet Expected Value", "Poker Expected Value"]
+tabs = ["Seat Optimiser", "Poker Side Bet Expected Value", "Poker Expected Value","Blackjack Side Bet Expected Value (Work In Progress)"]
 
 # Conditionally include the last tab
-if "total_players" in st.session_state:
+if "total_players" in sts:
     tabs_to_display = tabs  # Show all tabs
 else:
-    tabs_to_display = tabs[:-1]  # Exclude the last tab
+    tabs_to_display = ["Seat Optimiser", "Poker Side Bet Expected Value","Blackjack Side Bet Expected Value (Work In Progress)"]  # Exclude the last tab
 
 # Display the radio button with the filtered tabs
-selected_tab = st.sidebar.radio("Select Page", tabs_to_display)
+selected_tab = st.sidebar.radio("**Select Page**", tabs_to_display)
 
 if selected_tab == "Seat Optimiser":
     # Title
@@ -35,24 +37,24 @@ if selected_tab == "Seat Optimiser":
     st.write("Use this tool to maximise the probabiliy of winning by optimising the seating arrangement")
 
     # Initialize session state for Tables
-    if "Tables" not in st.session_state:
-        st.session_state.Tables = [{"Player": 0, "Table": 0, "Optimised": 0} for _ in range(3)]  # Default 3 Tables
+    if "Tables" not in sts:
+        sts.Tables = [{"Player": 0, "Table": 0, "Optimised": 0} for _ in range(3)]  # Default 3 Tables
 
     # Initialize session state for overall probabilities
-    if "current_prob" not in st.session_state:
-        st.session_state.current_prob = 0  # Default value
-    if "optimised_prob" not in st.session_state:
-        st.session_state.optimised_prob = 0  # Default value
+    if "current_prob" not in sts:
+        sts.current_prob = 0  # Default value
+    if "optimised_prob" not in sts:
+        sts.optimised_prob = 0  # Default value
 
     # Function to optimize probabilities
     def seating_probability():
-        tables = len(st.session_state.Tables)
+        tables = len(sts.Tables)
         seats = 7
-        open_seats = [7 - table["Player"] for table in st.session_state.Tables]
-        if (sum(table["Table"] for table in st.session_state.Tables)>0):
-            st.session_state.total_players = sum(table["Table"] for table in st.session_state.Tables)
+        open_seats = [7 - table["Player"] for table in sts.Tables]
+        if (sum(table["Table"] for table in sts.Tables)>0):
+            sts.total_players = sum(table["Table"] for table in sts.Tables)
         else:
-            st.session_state.total_players = st.session_state.TotalPlayers 
+            sts.total_players = sts.TotalPlayers 
 
 
         # Generate all possible combinations of seated players per table
@@ -64,7 +66,7 @@ if selected_tab == "Seat Optimiser":
         
         # Add total column and filter valid combinations
         df["Total"] = df.sum(axis=1)
-        filtered_df = df[df["Total"] == st.session_state.total_players].copy()
+        filtered_df = df[df["Total"] == sts.total_players].copy()
         
         # Calculate probability
         row_probabilities = np.zeros(len(filtered_df))
@@ -90,62 +92,62 @@ if selected_tab == "Seat Optimiser":
 
         # Update session state only when optimize button is clicked
         for idx in range(len(best_solution)-1):
-            st.session_state.Tables[idx]["Optimised"] = best_solution[idx]
+            sts.Tables[idx]["Optimised"] = best_solution[idx]
 
-        st.session_state.optimised_prob = round(max_probability,2)
+        sts.optimised_prob = round(max_probability,2)
    
 
 
     # Setting total player box to equal selected players
-    if (sum(table["Table"] for table in st.session_state.Tables)>0):
-        Total_Players = sum(table["Table"] for table in st.session_state.Tables)
-        st.session_state.TotalPlayers = Total_Players
+    if (sum(table["Table"] for table in sts.Tables)>0):
+        Total_Players = sum(table["Table"] for table in sts.Tables)
+        sts.TotalPlayers = Total_Players
 
-    if "total_players" not in st.session_state:
-        st.session_state.total_players=0
+    if "total_players" not in sts:
+        sts.total_players=0
 
     st.subheader("Probability Overview")
     probability_cols = st.columns([1, 1])  # Add one extra column for the button
-    probability_cols[0].number_input("**Total Team Members**",min_value=0,key="TotalPlayers",value=st.session_state.total_players)
+    probability_cols[0].number_input("**Total Team Members**",min_value=0,key="TotalPlayers",value=sts.total_players)
     probability_cols[0].write("If team members entered below total team members cannot be changed")
-    probability_cols[1].subheader(f"**Current Probability**: {st.session_state.current_prob}")
-    probability_cols[1].subheader(f"**Maximum Probility**: {st.session_state.optimised_prob}")
+    probability_cols[1].subheader(f"**Current Probability**: {sts.current_prob}")
+    probability_cols[1].subheader(f"**Maximum Probility**: {sts.optimised_prob}")
     probability_cols[1].button("Optimise", on_click=seating_probability,type="primary")
 
      # Transparent Variables
-    NoTables = len(st.session_state.Tables)
+    NoTables = len(sts.Tables)
     NoSeats = 7
-    Open_Seats = [7 - table["Player"] for table in st.session_state.Tables]
-    if (sum(table["Table"] for table in st.session_state.Tables)>0):
-        Total_Players = sum(table["Table"] for table in st.session_state.Tables)
+    Open_Seats = [7 - table["Player"] for table in sts.Tables]
+    if (sum(table["Table"] for table in sts.Tables)>0):
+        Total_Players = sum(table["Table"] for table in sts.Tables)
     else:
-        Total_Players = st.session_state.TotalPlayers 
+        Total_Players = sts.TotalPlayers 
 
         
     # Function to add a Table
     def add_Table():
-        st.session_state.Tables.append({"Player": 0, "Table": 0, "Optimised": 0})
+        sts.Tables.append({"Player": 0, "Table": 0, "Optimised": 0})
 
     # Function to remove a Table
     def remove_Table():
-        if len(st.session_state.Tables) > 1:
-            st.session_state.Tables.pop()
+        if len(sts.Tables) > 1:
+            sts.Tables.pop()
 
     # Layout for Tables
     def update_table(idx, key):
-        st.session_state.Tables[idx][key] = st.session_state[f"{key}_{idx}"]
-        emptyTables = sum(1 for t in st.session_state.Tables if (t["Player"] + t["Table"]) == 0)
-        st.session_state.current_prob = 0
-        st.session_state.optimised_prob = 0
+        sts.Tables[idx][key] = sts[f"{key}_{idx}"]
+        emptyTables = sum(1 for t in sts.Tables if (t["Player"] + t["Table"]) == 0)
+        sts.current_prob = 0
+        sts.optimised_prob = 0
 
         if emptyTables < NoTables:
             for t in range(NoTables):
-                if (st.session_state.Tables[t]["Player"] + st.session_state.Tables[t]["Table"]) > 0:
-                    st.session_state.current_prob += st.session_state.Tables[t]["Table"] / (st.session_state.Tables[t]["Player"] + st.session_state.Tables[t]["Table"])
+                if (sts.Tables[t]["Player"] + sts.Tables[t]["Table"]) > 0:
+                    sts.current_prob += sts.Tables[t]["Table"] / (sts.Tables[t]["Player"] + sts.Tables[t]["Table"])
 
-            st.session_state.current_prob = round(st.session_state.current_prob / (NoTables - emptyTables), 2)
+            sts.current_prob = round(sts.current_prob / (NoTables - emptyTables), 2)
 
-    for idx, Table in enumerate(st.session_state.Tables):
+    for idx, Table in enumerate(sts.Tables):
         st.subheader(f"Table {idx + 1}")
         
         with st.container():
@@ -155,8 +157,8 @@ if selected_tab == "Seat Optimiser":
             cols[0].number_input(
                 f"Opponents (Table {idx + 1})",
                 min_value=0,
-                max_value=NoSeats-st.session_state.Tables[idx]["Table"],
-                value=st.session_state.Tables[idx]["Player"],
+                max_value=NoSeats-sts.Tables[idx]["Table"],
+                value=sts.Tables[idx]["Player"],
                 key=f"Player_{idx}",
                 on_change=update_table,
                 args=(idx, "Player")
@@ -166,14 +168,14 @@ if selected_tab == "Seat Optimiser":
             cols[1].number_input(
                 f"Team Members (Table {idx + 1})",
                 min_value=0,
-                max_value=NoSeats-st.session_state.Tables[idx]["Player"],
-                value=st.session_state.Tables[idx]["Table"],
+                max_value=NoSeats-sts.Tables[idx]["Player"],
+                value=sts.Tables[idx]["Table"],
                 key=f"Table_{idx}",
                 on_change=update_table,
                 args=(idx, "Table")
             )
-            opponents = st.session_state.Tables[idx]["Player"]  # Number of opponent players
-            team_members = st.session_state.Tables[idx]["Table"]  # Number of team members
+            opponents = sts.Tables[idx]["Player"]  # Number of opponent players
+            team_members = sts.Tables[idx]["Table"]  # Number of team members
             total_filled = opponents + team_members
             empty_seats = 7 - total_filled  # Remaining empty seats
 
@@ -188,13 +190,13 @@ if selected_tab == "Seat Optimiser":
             # Text input for Optimised (disabled to prevent unwanted changes)
             cols[2].text_input(
                 f"Optimised (Table {idx + 1})",
-                value=st.session_state.Tables[idx]["Optimised"],
+                value=sts.Tables[idx]["Optimised"],
                 key=f"optimised_{idx}",
                 disabled=True
             )
 
             
-            team_members_opt = st.session_state.Tables[idx]["Optimised"]  # Number of team members
+            team_members_opt = sts.Tables[idx]["Optimised"]  # Number of team members
             total_filled_opt = opponents + team_members_opt
             empty_seats_opt = 7 - total_filled_opt  # Remaining empty seats
 
@@ -202,7 +204,7 @@ if selected_tab == "Seat Optimiser":
             seat_display_opt = " ".join(["🔴"] * opponents + ["🟢"] * team_members_opt + ["⚪"] * empty_seats_opt)
 
             # Display seats below the inputs
-            if st.session_state.optimised_prob!=0:
+            if sts.optimised_prob!=0:
                 #cols[0].write("**Best Seating Arrangement:**")
                 cols[2].markdown(f"{seat_display_opt}")
 
@@ -217,23 +219,23 @@ elif selected_tab == "Poker Side Bet Expected Value":
     st.title("Poker Side Bet Expected Value")
     st.subheader("If the EV is above 1, the odds are in you favour")
     
-    if "num1" not in st.session_state:
-        st.session_state.num1 = 1000000
-        st.session_state.num2 = 100000
-        st.session_state.num3 = 10000
+    if "num1" not in sts:
+        sts.num1 = 1000000
+        sts.num2 = 100000
+        sts.num3 = 10000
 
     # Three integer input boxes
-    st.session_state.num1 = st.number_input("Top Progressive", min_value=0,value= st.session_state.num1, step=10000)
-    st.session_state.num2 = st.number_input("Second Progressive", min_value=0,value= st.session_state.num2, step=10000)
-    st.session_state.num3 = st.number_input("Third Progressive", min_value=0,value= st.session_state.num3, step=1000)
+    sts.num1 = st.number_input("Top Progressive", min_value=0,value= sts.num1, step=10000)
+    sts.num2 = st.number_input("Second Progressive", min_value=0,value= sts.num2, step=10000)
+    sts.num3 = st.number_input("Third Progressive", min_value=0,value= sts.num3, step=1000)
     BetAmount = st.number_input("Bet Amount", min_value=0,value=100, step=50)
 
     #Display results
-    st.session_state.EV_Poker_Screen = (800*st.session_state.num1+12480*st.session_state.num2+74880*st.session_state.num3+102160*50*BetAmount+204000*10*BetAmount)/(51584880*BetAmount)
-    st.session_state.EV_Poker_Screen_Reduced = (0*st.session_state.num1+0*st.session_state.num2+74880*st.session_state.num3+102160*50*BetAmount+204000*10*BetAmount)/(51584880*BetAmount)
-    st.subheader(f"Expected value = {round( st.session_state.EV_Poker_Screen,2)}")
+    sts.EV_Poker_Screen = (800*sts.num1+12480*sts.num2+74880*sts.num3+102160*50*BetAmount+204000*10*BetAmount)/(51584880*BetAmount)
+    sts.EV_Poker_Screen_Reduced = (0*sts.num1+0*sts.num2+74880*sts.num3+102160*50*BetAmount+204000*10*BetAmount)/(51584880*BetAmount)
+    st.subheader(f"Expected value = **{round( sts.EV_Poker_Screen,2)}**")
 
-elif selected_tab == "Blackjack Side Bet Expected Value":
+elif selected_tab == "Blackjack Side Bet Expected Value (Work In Progress)":
     # New Page Content
     st.title("Blackjack Side Bet Expected Value")
     st.subheader("If the EV is above 1, the odds are in you favour")
@@ -245,54 +247,57 @@ elif selected_tab == "Blackjack Side Bet Expected Value":
     BetAmount = st.number_input("Bet Amount", min_value=0,value=100, step=50)
 
     #Display results
-    st.session_state.EV_BJ_Screen = (800*num1+12480*num2+74880*num3+102160*50*BetAmount+204000*10*BetAmount)/(51584880*BetAmount)
-    st.subheader(f"Expected value = {round( st.session_state.EV_BJ_Screen,2)}")
+    sts.EV_BJ_Screen = (800*num1+12480*num2+74880*num3+102160*50*BetAmount+204000*10*BetAmount)/(51584880*BetAmount)
+    st.subheader(f"Expected value = **{round( sts.EV_BJ_Screen,2)}**")
 
 elif selected_tab == "Poker Expected Value":
     st.title("Poker Expected Value")
-    st.session_state.Bet=st.number_input("Per Hand Bet amount:",min_value=0,step=50,value=200)
-    st.session_state.Lights_Bet=st.number_input("Per Hand Lights Bet amount:",min_value=0,step=50,value=100)
-    st.session_state.TotalBets = st.number_input("Bets per hour:",min_value=0,step=500,value=5000)
-    st.session_state.TotalLightBets = st.number_input("Light Bets per hour:",min_value=0,step=500,value=3000)
-    st.session_state.CurrentMystery = st.number_input("Poker Mystery Jackpot",min_value=0,step=10000,value=170000)
-    st.write(f"The mystery increases at a rate of {format_currency(round(6000*(st.session_state.total_players+sum(table["Player"] for table in st.session_state.Tables))/20))} per hour based on current assumptions and a player count of {sum(table["Player"] for table in st.session_state.Tables)+st.session_state.total_players}")
-    st.session_state.dist=st.selectbox("Please select the assumed mystery drop distribution below:",["Increasing","Flat"])
-    st.session_state.BigWins = st.checkbox("Remove four of a kind and straight flush:")
+    #sts.Bet=st.number_input("Per Hand Bet amount:",min_value=0,step=50,value=200)
+    #sts.Lights_Bet=st.number_input("Per Hand Lights Bet amount:",min_value=0,step=50,value=100)
+    sts.TotalBets = st.number_input("Bets per hour:",min_value=0,step=500,value=5000)
+    sts.TotalLightBets = st.number_input("Light Bets per hour:",min_value=0,step=500,value=3000)
+    sts.CurrentMystery = st.number_input("Poker Mystery Jackpot:",min_value=0,step=5000,value=170000)
+    st.write(f"The mystery increases at a rate of **{format_currency(round(6000*(sts.total_players+sum(table["Player"] for table in sts.Tables))/20))}** per hour based on current assumptions and a player count of **{sum(table["Player"] for table in sts.Tables)+sts.total_players}**")
+    sts.lightRate = 6000*(sts.total_players+sum(table["Player"] for table in sts.Tables))/20
+    sts.timeRemaining = (200000-sts.CurrentMystery)/sts.lightRate
+    sts.slice = math.ceil(sts.timeRemaining)
+    st.write(f"It would therefore take **{round(sts.timeRemaining,2)}** hours to reach R200,000")
+    sts.dist=st.selectbox("Please select the assumed mystery drop distribution below:",["Increasing","Flat"])
+    sts.BigWins = st.checkbox("Remove four of a kind and straight flush:")
     #Will go go casino and figure out the rate of increase for a given amount of players. Lets say R6000 per hour for 20 players.
-    st.session_state.lightRate = 6000*(st.session_state.total_players+sum(table["Player"] for table in st.session_state.Tables))/20
-    print(st.session_state.lightRate)
-    st.session_state.timeRemaining = (200000-st.session_state.CurrentMystery)/st.session_state.lightRate
-    print(st.session_state.timeRemaining)
-    st.session_state.slice = math.ceil(st.session_state.timeRemaining)
+    
 
-    if st.session_state.dist=="Flat":
-        st.session_state.distribution = np.ones(st.session_state.slice)/st.session_state.slice
+    if sts.dist=="Flat":
+        sts.distribution = np.ones(sts.slice)/sts.slice
     else:
         # Calculate the distribution
-        st.session_state.distribution = np.arange(1, st.session_state.slice + 1) / st.session_state.slice
+        sts.distribution = np.arange(1, sts.slice + 1) / sts.slice
 
         # Normalize the distribution
-        st.session_state.distribution = st.session_state.distribution / np.sum(st.session_state.distribution)
+        sts.distribution = sts.distribution / np.sum(sts.distribution)
     
-    print(st.session_state.distribution)
-    print(np.sum(st.session_state.distribution))
-    PokerEv = np.empty(st.session_state.slice)
-    for t in range(0,st.session_state.slice):
-        print(st.session_state.optimised_prob/st.session_state.total_players*(st.session_state.CurrentMystery+(200000-st.session_state.CurrentMystery)*(t+1)/st.session_state.slice))
-        print((st.session_state.EV_Poker_Screen-1)*st.session_state.TotalLightBets*st.session_state.timeRemaining/st.session_state.slice*(t+1))
-        print((0.9704-1)*st.session_state.TotalBets*st.session_state.timeRemaining/st.session_state.slice*(t+1))
-        PokerEv[t]= st.session_state.distribution[t]*(st.session_state.optimised_prob/st.session_state.total_players*(st.session_state.CurrentMystery+(200000-st.session_state.CurrentMystery)*(t+1)/st.session_state.slice)
-        +((st.session_state.EV_Poker_Screen*(1-st.session_state.BigWins)+st.session_state.EV_Poker_Screen_Reduced*(st.session_state.BigWins)-1)*st.session_state.TotalLightBets+((1-st.session_state.BigWins)*0.9704+st.session_state.BigWins*0.95176-1)*st.session_state.TotalBets-200)*st.session_state.timeRemaining/st.session_state.slice*(t+1))
-    
+    PokerEv = np.empty(sts.slice)
+    TotalSpend = np.empty(sts.slice)
+    for t in range(0,sts.slice):
+        
+        PokerEv[t] = sts.distribution[t]*(sts.optimised_prob/sts.total_players*(sts.CurrentMystery+(200000-sts.CurrentMystery)*(t+1)/sts.slice)
+        +((sts.EV_Poker_Screen*(1-sts.BigWins)+sts.EV_Poker_Screen_Reduced*(sts.BigWins)-1)*sts.TotalLightBets+((1-sts.BigWins)*0.9704+sts.BigWins*0.95176-1)*sts.TotalBets-200)*sts.timeRemaining/sts.slice*(t+1))
 
-    print(PokerEv)
-    print(st.session_state.total_players)
-    st.write(f"The expected value per player is {format_currency(round(np.sum(PokerEv)))}")
-    st.write(f"The total expected value is {format_currency(round(np.sum(PokerEv)*st.session_state.total_players))}")
-    st.write(f"Each hour of normal poker play contributes {format_currency(round((0.9704-1)*st.session_state.TotalBets))} per player")
-    st.write(f"Each hour of playing the light for progressive contributes {format_currency(round(st.session_state.EV_Poker_Screen*st.session_state.TotalLightBets-st.session_state.TotalLightBets))} per player")
-    st.write(f"Each hour of playing the light for mystery contributes on average {format_currency(round((st.session_state.optimised_prob/st.session_state.total_players*(200000+st.session_state.CurrentMystery)/2)/st.session_state.timeRemaining))} per player")
-    st.write(f"Wage for each hour of play contributes -R200 per player")
+        TotalSpend[t] = sts.distribution[t]*(sts.TotalBets+sts.TotalLightBets)*sts.timeRemaining/sts.slice*(t+1)
+
+    print(TotalSpend)
+    print(np.sum(TotalSpend)*sts.total_players)
+    print(np.sum(PokerEv)/(np.sum(TotalSpend)*sts.total_players))
+
+    st.write(f"The expected value per player is **{format_currency(round(np.sum(PokerEv)))}**")
+    st.write(f"The total expected value is **{format_currency(round(np.sum(PokerEv)*sts.total_players))}**")
+
+    st.subheader("Extra Information:")
+    st.write(f"Each hour of normal poker play contributes **{format_currency(round(((1-sts.BigWins)*0.9704+sts.BigWins*0.95176-1)*sts.TotalBets))}** per player")
+    st.write(f"Each hour of playing the light for progressive contributes **{format_currency(round((sts.EV_Poker_Screen*(1-sts.BigWins)+sts.EV_Poker_Screen_Reduced*(sts.BigWins)-1)*sts.TotalLightBets))}** per player")
+    st.write(f"Each hour of playing the light for mystery contributes on average **{format_currency(round((sts.optimised_prob/sts.total_players*(200000+sts.CurrentMystery)/2)/sts.timeRemaining))}** per player")
+    st.write(f"Wage for each hour of play contributes **-R200** per player")
+    st.write(f"Current conditions reflect a total return of **{round(np.sum(PokerEv)/(np.sum(TotalSpend)*sts.total_players)*100,2)}%** over the long run")
 
 
         
