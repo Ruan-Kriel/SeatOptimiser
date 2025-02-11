@@ -2,12 +2,13 @@ import streamlit as st
 import pandas as pd
 import itertools
 import numpy as np
+from streamlit_drawable_canvas import st_canvas
 
 # Set page configuration for mobile view
 st.set_page_config(page_title="Table Probability Optimiser", layout="centered")
 
 # Add tab navigation
-selected_tab = st.sidebar.radio("Select Page", ["Seat Optimiser", "Poker Side Bet Expected Value","Blackjack Side Bet Expected Value"])
+selected_tab = st.sidebar.radio("Select Page", ["Seat Optimiser", "Poker Side Bet Expected Value","Blackjack Side Bet Expected Value","Poker Expected Value"])
 
 if selected_tab == "Seat Optimiser":
     # Title
@@ -219,3 +220,16 @@ elif selected_tab == "Blackjack Side Bet Expected Value":
     #Display results
     EV = (800*num1+12480*num2+74880*num3+102160*50*BetAmount+204000*10*BetAmount)/(51584880*BetAmount)
     st.subheader(f"Expected value = {round(EV,2)}")
+
+elif selected_tab == "Poker Expected Value":
+    st.title("Poker Expected Value")
+    st.session_state.Bet=st.number_input("Per Hand Bet amount:",min_value=0,step=50,value=200)
+    st.session_state.Lights_Bet=st.number_input("Per Hand Lights Bet amount:",min_value=0,step=50,value=100)
+    st.session_state.TotalBets = st.number_input("Bets per hour:",min_value=0,step=500,value=5000)
+    st.session_state.TotalBets = st.number_input("Light Bets per hour:",min_value=0,step=500,value=3000)
+    st.session_state.Players = st.number_input("Total players:",min_value=0,step=1,value=10)
+    st.write("The mystery increases at a rate of x per hour based on the above assumptions.")
+    st.session_state.dist=st.selectbox("Please select the assumed mystery drop distribution below:",["Flat","Increasing"])
+
+    
+
